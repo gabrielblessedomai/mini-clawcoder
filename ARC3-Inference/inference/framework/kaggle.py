@@ -1,4 +1,4 @@
-"""Kaggle helpers for the ARC3 duck harness."""
+"""Kaggle helpers for the ARC3 Mini-ClawCoder harness."""
 
 from __future__ import annotations
 
@@ -8,16 +8,16 @@ from dataclasses import dataclass
 from inference.utils.openai_compat import normalize_provider
 
 DEFAULT_VLLM_WHEELHOUSE_DATASET_SOURCE = "driessmit1/arc3-vllm-h100-wheelhouse-v3"
-DEFAULT_QWEN_MODEL_DATASET_SOURCE = "driessmit1/vrfai-qwen3-6-27b-fp8-hf-snapshot"
-DEFAULT_SERVED_MODEL_NAME = "vrfai/Qwen3.6-27B-FP8"
+DEFAULT_QWEN_MODEL_DATASET_SOURCE = "gabrielblessed/qwen3-32b-original"
+DEFAULT_SERVED_MODEL_NAME = "gabrielblessed/qwen3-32b-original"
 DEFAULT_VLLM_PORT = 1234
 DEFAULT_VLLM_MAX_MODEL_LEN = 65536
 DEFAULT_VLLM_TENSOR_PARALLEL_SIZE = 1
 DEFAULT_WHEELHOUSE_STAMP_TEXT = "vllm==0.19.0 torch==2.10.0 flashinfer==0.6.6\n"
 
-# The 25 official ARC-AGI-3 games. The first 16 are the original Kaggle duck
+# The 25 official ARC-AGI-3 games. The first 16 are the original Kaggle Mini-ClawCoder
 # validation harness order; the remaining 9 complete the official tag set.
-DUCK_HARNESS_PUBLIC_GAME_IDS: tuple[str, ...] = (
+MINI_CLAWCODER_HARNESS_PUBLIC_GAME_IDS: tuple[str, ...] = (
     "tn36-ef4dde99",
     "lf52-271a04aa",
     "cn04-2fe56bfb",
@@ -47,7 +47,7 @@ DUCK_HARNESS_PUBLIC_GAME_IDS: tuple[str, ...] = (
 
 
 @dataclass(frozen=True)
-class DuckKaggleVllmConfig:
+class MiniClawCoderKaggleVllmConfig:
     """Kaggle-side vLLM/model configuration declared by ``HarnessSolver``."""
 
     wheelhouse_dataset_source: str = DEFAULT_VLLM_WHEELHOUSE_DATASET_SOURCE
@@ -59,15 +59,15 @@ class DuckKaggleVllmConfig:
     wheelhouse_stamp_text: str = DEFAULT_WHEELHOUSE_STAMP_TEXT
 
 
-def duck_kaggle_dataset_sources(
-    config: DuckKaggleVllmConfig | None = None,
+def mini_clawcoder_kaggle_dataset_sources(
+    config: MiniClawCoderKaggleVllmConfig | None = None,
 ) -> list[str]:
-    cfg = config or DuckKaggleVllmConfig()
+    cfg = config or MiniClawCoderKaggleVllmConfig()
     return [cfg.wheelhouse_dataset_source, cfg.model_dataset_source]
 
 
-def duck_kaggle_setup_command(config: DuckKaggleVllmConfig | None = None) -> str:
-    cfg = config or DuckKaggleVllmConfig()
+def mini_clawcoder_kaggle_setup_command(config: MiniClawCoderKaggleVllmConfig | None = None) -> str:
+    cfg = config or MiniClawCoderKaggleVllmConfig()
     wheelhouse_owner, wheelhouse_slug = _split_dataset_source(
         cfg.wheelhouse_dataset_source,
         option_name="wheelhouse_dataset_source",
@@ -82,7 +82,7 @@ def duck_kaggle_setup_command(config: DuckKaggleVllmConfig | None = None) -> str
     analyzer_provider = os.environ.get("LOCAL_ANALYZER_PROVIDER", "vllm")
     if normalize_provider(analyzer_provider) != "vllm":
         raise ValueError(
-            f"kaggle-duck runs a local vLLM server, so LOCAL_ANALYZER_PROVIDER must be "
+            f"kaggle-Mini-ClawCoder runs a local vLLM server, so LOCAL_ANALYZER_PROVIDER must be "
             f"vLLM/OpenAI-compatible, got {analyzer_provider!r}."
         )
     replacements = {
@@ -121,14 +121,14 @@ def duck_kaggle_setup_command(config: DuckKaggleVllmConfig | None = None) -> str
         "__VLLM_TENSOR_PARALLEL_SIZE__": repr(int(cfg.tensor_parallel_size)),
         "__WHEELHOUSE_STAMP_TEXT__": repr(cfg.wheelhouse_stamp_text),
     }
-    script = _DUCK_VLLM_SETUP_SCRIPT
+    script = _MINI_CLAWCODER_VLLM_SETUP_SCRIPT
     for placeholder, value in replacements.items():
         script = script.replace(placeholder, value)
     return f"\"$PYTHON\" - <<'PYSETUP'\n{script}\nPYSETUP"
 
 
-def duck_kaggle_teardown_command() -> str:
-    return f"\"$PYTHON\" - <<'PYTEARDOWN'\n{_DUCK_VLLM_TEARDOWN_SCRIPT}\nPYTEARDOWN"
+def mini_clawcoder_kaggle_teardown_command() -> str:
+    return f"\"$PYTHON\" - <<'PYTEARDOWN'\n{_MINI_CLAWCODER_VLLM_TEARDOWN_SCRIPT}\nPYTEARDOWN"
 
 
 def _split_dataset_source(value: str, *, option_name: str) -> tuple[str, str]:
@@ -140,7 +140,7 @@ def _split_dataset_source(value: str, *, option_name: str) -> tuple[str, str]:
     return parts[0], parts[1]
 
 
-_DUCK_VLLM_SETUP_SCRIPT = r"""import json
+_MINI_CLAWCODER_VLLM_SETUP_SCRIPT = r"""import json
 import os
 import shutil
 import subprocess
@@ -160,7 +160,7 @@ VLLM_BASE_URL = f'http://{VLLM_HOST}:{VLLM_PORT}/v1'
 VLLM_MAX_MODEL_LEN = __VLLM_MAX_MODEL_LEN__
 ANALYZER_CONTEXT_WINDOW = __ANALYZER_CONTEXT_WINDOW__
 VLLM_TENSOR_PARALLEL_SIZE = __VLLM_TENSOR_PARALLEL_SIZE__
-WORKING_DIR = Path(os.environ['TAAF_KAGGLE_WORKING_DIR'])
+WORKING_DIR = Path(os.environ['MINI_CLAWCODER_KAGGLE_WORKING_DIR'])
 SITE_PACKAGES = WORKING_DIR / 'vllm-site-packages'
 VLLM_SERVER_LOG = WORKING_DIR / 'vllm-openai-server.log'
 VLLM_SERVER_PID = WORKING_DIR / 'vllm-openai-server.pid'
@@ -170,18 +170,18 @@ STAMP_TEXT = __WHEELHOUSE_STAMP_TEXT__
 GPU_NAME_PATTERNS = {'rtx-pro-6000': ('rtx pro 6000',), 'h100': ('h100',), 'l4': ('l4',)}
 
 
-def taaf_kaggle_input_paths() -> dict[str, Path]:
-    raw = os.getenv('TAAF_KAGGLE_INPUT_PATHS', '').strip()
+def mini_clawcoder_kaggle_input_paths() -> dict[str, Path]:
+    raw = os.getenv('MINI_CLAWCODER_KAGGLE_INPUT_PATHS', '').strip()
     if not raw:
         return {}
     data = json.loads(raw)
     if not isinstance(data, dict):
-        raise RuntimeError('TAAF_KAGGLE_INPUT_PATHS must contain a JSON object.')
+        raise RuntimeError('MINI_CLAWCODER_KAGGLE_INPUT_PATHS must contain a JSON object.')
     return {str(ref): Path(str(path)) for ref, path in data.items()}
 
 
 def resolve_kaggle_dataset_path(owner: str, slug: str) -> Path:
-    mapped = taaf_kaggle_input_paths().get(f'{owner}/{slug}')
+    mapped = mini_clawcoder_kaggle_input_paths().get(f'{owner}/{slug}')
     if mapped is not None:
         return mapped
     for dataset_path in (Path('/kaggle/input') / slug, Path('/kaggle/input/datasets') / owner / slug):
@@ -391,23 +391,23 @@ setup_env = {
     'MULTIMODAL_CONTEXT': __MULTIMODAL_CONTEXT__,
     'MULTIMODAL_UPSCALE': __MULTIMODAL_UPSCALE__,
 }
-setup_env_path = Path(os.environ['TAAF_KAGGLE_SETUP_ENV'])
+setup_env_path = Path(os.environ['MINI_CLAWCODER_KAGGLE_SETUP_ENV'])
 existing_setup_env = {}
 if setup_env_path.exists():
     existing_setup_env = json.loads(setup_env_path.read_text(encoding='utf-8'))
     if not isinstance(existing_setup_env, dict):
-        raise RuntimeError('TAAF_KAGGLE_SETUP_ENV must contain a JSON object.')
+        raise RuntimeError('MINI_CLAWCODER_KAGGLE_SETUP_ENV must contain a JSON object.')
 existing_setup_env.update(setup_env)
 setup_env_path.write_text(json.dumps(existing_setup_env, indent=2), encoding='utf-8')
 """
 
-_DUCK_VLLM_TEARDOWN_SCRIPT = r"""import os
+_MINI_CLAWCODER_VLLM_TEARDOWN_SCRIPT = r"""import os
 import shutil
 import signal
 import time
 from pathlib import Path
 
-WORKING_DIR = Path(os.environ['TAAF_KAGGLE_WORKING_DIR'])
+WORKING_DIR = Path(os.environ['MINI_CLAWCODER_KAGGLE_WORKING_DIR'])
 pid_path = WORKING_DIR / 'vllm-openai-server.pid'
 site_packages = WORKING_DIR / 'vllm-site-packages'
 if pid_path.exists():

@@ -15,7 +15,7 @@
       "cpu_only": false,
       "dataset_ref": null,
       "dry_run": false,
-      "duck_public_harness": false,
+      "mini_clawcoder_public_harness": false,
       "enable_internet": false,
       "kernel_slug": "taaf-0-history-turns",
       "kernel_title": "taaf-0-history-turns",

@@ -43,10 +43,10 @@ from inference.framework.kaggle import (
     DEFAULT_VLLM_TENSOR_PARALLEL_SIZE,
     DEFAULT_VLLM_WHEELHOUSE_DATASET_SOURCE,
     DEFAULT_WHEELHOUSE_STAMP_TEXT,
-    DuckKaggleVllmConfig,
-    duck_kaggle_dataset_sources,
-    duck_kaggle_setup_command,
-    duck_kaggle_teardown_command,
+    MiniClawCoderKaggleVllmConfig,
+    mini_clawcoder_kaggle_dataset_sources,
+    mini_clawcoder_kaggle_setup_command,
+    mini_clawcoder_kaggle_teardown_command,
 )
 from inference.utils.viewer_artifacts import (
     append_raw_events_sidecar,
@@ -853,22 +853,22 @@ class HarnessSolver(Solver):
     def kaggle_dataset_sources(self) -> list[str]:
         if not self.kaggle_enable_vllm:
             return []
-        return duck_kaggle_dataset_sources(self._kaggle_vllm_config())
+        return mini_clawcoder_kaggle_dataset_sources(self._kaggle_vllm_config())
 
     @property
     def kaggle_setup_commands(self) -> list[str]:
         if not self.kaggle_enable_vllm:
             return []
-        return [duck_kaggle_setup_command(self._kaggle_vllm_config())]
+        return [mini_clawcoder_kaggle_setup_command(self._kaggle_vllm_config())]
 
     @property
     def kaggle_teardown_commands(self) -> list[str]:
         if not self.kaggle_enable_vllm:
             return []
-        return [duck_kaggle_teardown_command()]
+        return [mini_clawcoder_kaggle_teardown_command()]
 
-    def _kaggle_vllm_config(self) -> DuckKaggleVllmConfig:
-        return DuckKaggleVllmConfig(
+    def _kaggle_vllm_config(self) -> MiniClawCoderKaggleVllmConfig:
+        return MiniClawCoderKaggleVllmConfig(
             wheelhouse_dataset_source=self.kaggle_wheelhouse_dataset_source,
             model_dataset_source=self.kaggle_model_dataset_source,
             served_model_name=self.kaggle_served_model_name,

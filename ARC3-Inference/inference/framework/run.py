@@ -28,7 +28,7 @@ import taaf.deploy_slurm
 import taaf.game
 import taaf.game_api
 
-from inference.framework.kaggle import DUCK_HARNESS_PUBLIC_GAME_IDS
+from inference.framework.kaggle import MINI_CLAWCODER_HARNESS_PUBLIC_GAME_IDS
 from inference.framework.solver import HarnessSolver
 from inference.utils.run_artifacts import save_git_info, setup_experiment_directory
 
@@ -114,11 +114,11 @@ def _resolve_game_ids(args: argparse.Namespace) -> list[str]:
     dataset_specs = _parse_optional_list(args.dataset, option_name="--dataset")
     include_tags = _parse_optional_list(args.include_tags, option_name="--include-tags")
     exclude_tags = _parse_optional_list(args.exclude_tags, option_name="--exclude-tags")
-    official_game_ids = list(DUCK_HARNESS_PUBLIC_GAME_IDS)
-    if bool(getattr(args, "kaggle_duck_public_harness", False)):
+    official_game_ids = list(MINI_CLAWCODER_HARNESS_PUBLIC_GAME_IDS)
+    if bool(getattr(args, "kaggle_mini_clawcoder_public_harness", False)):
         if requested_games or dataset_specs or include_tags or exclude_tags:
             raise ValueError(
-                "--kaggle-duck-public-harness cannot be combined with --game, "
+                "--kaggle-mini-clawcoder-public-harness cannot be combined with --game, "
                 "--dataset, --include-tags, or --exclude-tags."
             )
         return official_game_ids
@@ -129,7 +129,7 @@ def _resolve_game_ids(args: argparse.Namespace) -> list[str]:
         raise ValueError(
             "Dataset/tag-based game selection beyond '--include-tags official' is not "
             "available in this build. Use --game with explicit ids, --include-tags "
-            "official, or --kaggle-duck-public-harness."
+            "official, or --kaggle-mini-clawcoder-public-harness."
         )
     selected_game_ids = official_game_ids if include_tags else []
     if requested_games:
@@ -881,8 +881,8 @@ def _write_run_config(
                     getattr(args, "kaggle_run_as_submission", False)
                 ),
                 "dry_run": bool(getattr(args, "kaggle_dry_run", False)),
-                "duck_public_harness": bool(
-                    getattr(args, "kaggle_duck_public_harness", False)
+                "mini_clawcoder_public_harness": bool(
+                    getattr(args, "kaggle_mini_clawcoder_public_harness", False)
                 ),
                 "make_share_version": bool(
                     getattr(args, "kaggle_make_share_version", False)
@@ -1261,12 +1261,12 @@ def main() -> None:
         help="Repo path, comma-separated list, or JSON list bundled with Slurm/Kaggle deployments.",
     )
     parser.add_argument(
-        "--kaggle-duck-public-harness",
+        "--kaggle-mini-clawcoder-public-harness",
         action=argparse.BooleanOptionalAction,
         default=False,
         help=(
-            f"Run the {len(DUCK_HARNESS_PUBLIC_GAME_IDS)} public games used by the "
-            "duck Kaggle validation harness."
+            f"Run the {len(MINI_CLAWCODER_HARNESS_PUBLIC_GAME_IDS)} public games used by the "
+            "Mini-ClawCoder Kaggle validation harness."
         ),
     )
     parser.add_argument(

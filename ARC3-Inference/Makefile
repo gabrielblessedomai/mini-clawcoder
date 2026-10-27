@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := interactive
 
-.PHONY: install install-local-sources prepare-ci server stop-server check-server interactive sbatch kaggle-duck run _taaf-run chat eval score_run significance view trace traces zip clean cluster_view_queue
+.PHONY: install install-local-sources prepare-ci server stop-server check-server interactive sbatch kaggle-mini-clawcoder run _taaf-run chat eval score_run significance view trace traces zip clean cluster_view_queue
 
 -include .env
 
@@ -70,7 +70,7 @@ DEPLOYMENT_SLURM_IMAGE ?= $(shell $(CONFIG_VALUE) deployment.slurm.image)
 DEPLOYMENT_SLURM_PARTITION ?= $(shell $(CONFIG_VALUE) deployment.slurm.partition)
 DEPLOYMENT_SLURM_NODELIST ?= $(shell $(CONFIG_VALUE) deployment.slurm.nodelist)
 DEPLOYMENT_SLURM_EXTRA_SBATCH_FLAGS ?= $(shell $(CONFIG_VALUE) deployment.slurm.extra_sbatch_flags [])
-KAGGLE_DUCK_PUBLIC_HARNESS ?= false
+KAGGLE_MINI_CLAWCODER_PUBLIC_HARNESS ?= false
 KAGGLE_MAKE_SHARE_VERSION ?= false
 KAGGLE_USERNAME ?=
 KAGGLE_KERNEL_SLUG ?= $(if $(strip $(RUN_NAME)),taaf-$(RUN_NAME)$(if $(filter true TRUE 1 yes YES on ON,$(KAGGLE_MAKE_SHARE_VERSION)),-share),)
@@ -388,22 +388,22 @@ sbatch: DEPLOYMENT_TARGET = slurm
 sbatch: install-local-sources
 sbatch: _taaf-run
 
-kaggle-duck: DEPLOYMENT_TARGET = kaggle
-kaggle-duck: KAGGLE_DUCK_PUBLIC_HARNESS = true
-kaggle-duck: AGENT = duck-harness
-kaggle-duck: GAME =
-kaggle-duck: DATASET =
-kaggle-duck: GAME_TAGS =
-kaggle-duck: EXCLUDE_GAME_TAGS =
-kaggle-duck: MODEL = local
-kaggle-duck: RUN_NAME = duck-harness-kaggle
-kaggle-duck: MAX_RUNTIME_MINUTES = 132
-kaggle-duck: MAX_EXPERIMENT_RUNTIME_MINUTES = 540
-kaggle-duck: MAX_EXPERIMENT_RUNTIME_HOURS =
-kaggle-duck: N_PASSES = 1
-kaggle-duck: CONCURRENT_JOBS = 28
-kaggle-duck: ANALYZER_TIMEOUT = 900
-kaggle-duck: _taaf-run
+kaggle-mini-clawcoder: DEPLOYMENT_TARGET = kaggle
+kaggle-mini-clawcoder: KAGGLE_MINI_CLAWCODER_PUBLIC_HARNESS = true
+kaggle-mini-clawcoder: AGENT = inference
+kaggle-mini-clawcoder: GAME =
+kaggle-mini-clawcoder: DATASET =
+kaggle-mini-clawcoder: GAME_TAGS =
+kaggle-mini-clawcoder: EXCLUDE_GAME_TAGS =
+kaggle-mini-clawcoder: MODEL = local
+kaggle-mini-clawcoder: RUN_NAME = mini-clawcoder-harness-kaggle
+kaggle-mini-clawcoder: MAX_RUNTIME_MINUTES = 132
+kaggle-mini-clawcoder: MAX_EXPERIMENT_RUNTIME_MINUTES = 540
+kaggle-mini-clawcoder: MAX_EXPERIMENT_RUNTIME_HOURS =
+kaggle-mini-clawcoder: N_PASSES = 1
+kaggle-mini-clawcoder: CONCURRENT_JOBS = 28
+kaggle-mini-clawcoder: ANALYZER_TIMEOUT = 900
+kaggle-mini-clawcoder: _taaf-run
 
 _taaf-run:
 	@if [ -z "$(strip $(MODEL))" ]; then \
@@ -446,7 +446,7 @@ _taaf-run:
 		--deployment-target "$(DEPLOYMENT_TARGET)" \
 		$(if $(filter true TRUE 1 yes YES on ON,$(DEPLOYMENT_WAIT)),--deployment-wait,--no-deployment-wait) \
 		$(if $(filter-out [],$(strip $(DEPLOYMENT_SOURCE_REPOS))),--deployment-source-repos '$(DEPLOYMENT_SOURCE_REPOS)',) \
-		$(if $(filter true TRUE 1 yes YES on ON,$(KAGGLE_DUCK_PUBLIC_HARNESS)),--kaggle-duck-public-harness,) \
+		$(if $(filter true TRUE 1 yes YES on ON,$(KAGGLE_MINI_CLAWCODER_PUBLIC_HARNESS)),--kaggle-mini-clawcoder-public-harness,) \
 		$(if $(filter true TRUE 1 yes YES on ON,$(KAGGLE_MAKE_SHARE_VERSION)),--kaggle-make-share-version,) \
 		$(if $(strip $(KAGGLE_USERNAME)),--kaggle-username '$(KAGGLE_USERNAME)',) \
 		$(if $(strip $(KAGGLE_KERNEL_SLUG)),--kaggle-kernel-slug '$(KAGGLE_KERNEL_SLUG)',) \

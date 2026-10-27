@@ -1,13 +1,13 @@
-# The Duck 🦆
+# Mini-ClawCoder 🦆
 
-The Duck is the ARC3 inference harness in this repo: a tool-using solver that
+Mini-ClawCoder is the ARC3 inference harness in this repo: a tool-using solver that
 plays ARC-AGI-3 games through TAAF.
 
 It ties together:
 
 - TAAF `Benchmark` / `GameAPI` execution
 - a local OpenAI-compatible vLLM server, or OpenRouter
-- the duck's single ephemeral `python` tool
+- Mini-ClawCoder's single ephemeral `python` tool
 - structured run artifacts for scoring, viewing, and trace export
 
 The Python package lives under `inference/`. The run viewer lives under
@@ -54,14 +54,14 @@ there:
 make view VIEW_RUNS_DIR=/shared/arc_3_results/$USER
 ```
 
-## What The Duck Does
+## What Mini-ClawCoder Does
 
 For each TAAF game run, the harness starts a `HarnessSolver`. The solver gives
-the duck the latest game state, valid actions, history, and a Python tool. The
-duck inspects the board, writes small bits of code to reason about it, and calls
+Mini-ClawCoder the latest game state, valid actions, history, and a Python tool. Mini-ClawCoder
+inspects the board, writes small bits of code to reason about it, and calls
 `action(...)` from inside Python to execute real game actions.
 
-The duck can use:
+Mini-ClawCoder can use:
 
 - `current_frame.ascii` for a compact symbolic grid
 - `current_frame.segmentation` for connected components, object hashes,
@@ -116,7 +116,7 @@ Useful sections in `configs/inference.json`:
 - Kaggle runs are configured by CLI/Make overrides because the notebook slug
   and source dataset are usually per run.
 - `server.*`: vLLM model-serving settings.
-- `analyzer.*`: duck sampling/tool settings. This key is still named
+- `analyzer.*`: Mini-ClawCoder sampling/tool settings. This key is still named
   `analyzer` for compatibility with existing code and configs.
 - `chat.*`: direct chat probing with `make chat`.
 - `viewer.port`: default viewer port.
@@ -142,13 +142,13 @@ Submit to Slurm:
 make sbatch
 ```
 
-Launch the validated duck harness on Kaggle:
+Launch the validated Mini-ClawCoder harness on Kaggle:
 
 ```bash
-make kaggle-duck \
-  RUN_NAME=duck-harness-20260527 \
-  KAGGLE_KERNEL_SLUG=taaf-duck-harness-20260527 \
-  KAGGLE_DATASET_REF=driessmit1/taaf-kaggle-source-duck-harness-20260527
+make kaggle-Mini-ClawCoder \
+  RUN_NAME=Mini-ClawCoder-harness-20260527 \
+  KAGGLE_KERNEL_SLUG=taaf-Mini-ClawCoder-harness-20260527 \
+  KAGGLE_DATASET_REF=driessmit1/taaf-kaggle-source-Mini-ClawCoder-harness-20260527
 ```
 
 Name a run:
@@ -169,7 +169,7 @@ Run the official tag set with a whole-experiment cap:
 make sbatch GAME=[] GAME_TAGS=official MAX_EXPERIMENT_RUNTIME_MINUTES=360
 ```
 
-Run the duck locally against TAAF's competition Arcade simulator:
+Run the Mini-ClawCoder locally against TAAF's competition Arcade simulator:
 
 ```bash
 make interactive \
@@ -233,7 +233,7 @@ the run config, generated Slurm script, dependency override file, benchmark
 artifacts, diagnostics, and logs.
 
 For local-vLLM Slurm runs, the solver starts local server processes inside the
-allocation before the duck begins playing. Each run gets its own API key and
+allocation before the Mini-ClawCoder begins playing. Each run gets its own API key and
 run-scoped localhost ports, so a run either talks to its own server or fails
 fast. The server is started from the bundled `src/ARC3-Inference` snapshot in
 the run directory, using the worker's per-run virtualenv.
@@ -244,13 +244,13 @@ instead of fetching private dependencies from GitHub.
 
 ## Kaggle Flow
 
-`make kaggle-duck` runs through TAAF's Kaggle deployment. It packages the
+`make kaggle-Mini-ClawCoder` runs through TAAF's Kaggle deployment. It packages the
 current TAAF and ARC3-Inference sources into a Kaggle source dataset, pushes a
-private Kaggle notebook, and attaches the duck solver's declared model and vLLM
-wheelhouse datasets. The duck solver owns the Kaggle setup hooks, so the
+private Kaggle notebook, and attaches the Mini-ClawCoder solver's declared model and vLLM
+wheelhouse datasets. The Mini-ClawCoder solver owns the Kaggle setup hooks, so the
 launcher only chooses the run shape.
 
-By default the target uses the 16 public games from the duck harness validation,
+By default the target uses the 16 public games from the Mini-ClawCoder harness validation,
 `model=local`, 16 concurrent games, 75 minutes per game, and a 90-minute Kaggle
 runtime. Add `DEPLOYMENT_WAIT=true` if you want the command to block and pull
 the finished Kaggle output back into the run directory.
@@ -260,12 +260,12 @@ The equivalent direct CLI form is:
 ```bash
 uv run --no-sync inference-taaf-run \
   --deployment-target kaggle \
-  --kaggle-duck-public-harness \
-  --agent duck-harness \
+  --kaggle-mini-clawcoder-public-harness \
+  --agent mini-clawcoder-harness \
   --model local \
-  --run-name duck-harness-20260527 \
-  --kaggle-kernel-slug taaf-duck-harness-20260527 \
-  --kaggle-dataset-ref driessmit1/taaf-kaggle-source-duck-harness-20260527 \
+  --run-name mini-clawcoder-harness-20260527 \
+  --kaggle-kernel-slug taaf-mini-clawcoder-harness-20260527 \
+  --kaggle-dataset-ref driessmit1/taaf-kaggle-source-mini-clawcoder-harness-20260527 \
   --max-runtime-minutes 75 \
   --max-experiment-runtime-minutes 90 \
   --concurrent-jobs 16 \
@@ -285,7 +285,7 @@ Important files include:
 - `diagnostics.html`: TAAF diagnostics.
 - `artifacts/*_viewer_data.json`: compact viewer payloads.
 - `artifacts/*_events.jsonl`: append-only full viewer event sidecars.
-- duck transcript HTML/text files linked from the viewer.
+- Mini-ClawCoder transcript HTML/text files linked from the viewer.
 - `stdout.log` and `stderr.log` for Slurm jobs.
 - `requests.jsonl` files when `analyzer.save_request_logs` is true.
 
@@ -316,7 +316,7 @@ make view VIEW_RUN_DIR=/shared/arc_3_results/$USER/<run-name>
 ```
 
 The viewer shows run summaries, per-game progress, boards, actions, rewards,
-level transitions, and the duck's transcript.
+level transitions, and the Mini-ClawCoder's transcript.
 
 ## Scoring
 
@@ -373,7 +373,7 @@ test p-values as robustness checks.
 
 ## Trace Export
 
-Export machine-readable per-episode duck traces:
+Export machine-readable per-episode Mini-ClawCoder traces:
 
 ```bash
 make traces
@@ -410,12 +410,12 @@ transitions linked back to message indices.
 - `inference/framework/run.py`: CLI entry point and TAAF deployment setup.
 - `inference/framework/solver.py`: TAAF solver adapter, action execution,
   viewer events, transcripts, and local-server orchestration.
-- `inference/agent/tool_agent.py`: OpenAI-compatible tool-calling duck.
+- `inference/agent/tool_agent.py`: OpenAI-compatible tool-calling Mini-ClawCoder.
 - `inference/agent/python_tool_sandbox.py`: isolated Python tool runtime.
 - `inference/utils/segmentation.py`: connected-component board segmentation.
 - `inference/tools/eval.py`: TAAF score export.
 - `inference/tools/significance.py`: paired score comparison.
 - `inference/tools/traces.py`: trace export.
 - `viewer/`: local browser UI for saved runs.
-- `tests/`: unit coverage for config, duck runtime, TAAF runner, viewer,
+- `tests/`: unit coverage for config, Mini-ClawCoder runtime, TAAF runner, viewer,
   scoring, significance, and traces.

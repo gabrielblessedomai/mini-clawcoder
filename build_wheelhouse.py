@@ -72,7 +72,7 @@ def download_wheels(
     flashinfer_cmd = [
         sys.executable, "-m", "pip", "download",
         f"flashinfer=={flashinfer_version}",
-        "--index-url", "https://flashinfer.ai/whl/cu121",
+        "--index-url", f"https://flashinfer.ai/whl/{cuda_version}",
         "--no-deps",
         "-d", str(output_dir),
     ]
@@ -83,7 +83,7 @@ def download_wheels(
     vllm_cmd = [
         sys.executable, "-m", "pip", "download",
         f"vllm=={vllm_version}",
-        "--extra-index-url", "https://flashinfer.ai/whl/cu121",
+        "--extra-index-url", f"https://flashinfer.ai/whl/{cuda_version}",
         "-d", str(output_dir),
     ]
     run_command(vllm_cmd)
@@ -148,7 +148,7 @@ def create_metadata(output_dir: Path) -> None:
             "torch_version": "2.5.1",
             "vllm_version": "0.27.1",
             "flashinfer_version": "0.1.6",
-            "cuda_version": "cu121",
+            "cuda_version": "cu129",
             "build_date": subprocess.run(
                 ["date", "-Iseconds"],
                 capture_output=True,
@@ -170,7 +170,7 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("./vllm_wheelhouse_v0271_cu121"),
+        default=Path("./vllm_wheelhouse_v0271_cu129"),
         help="Output directory for wheels",
     )
     parser.add_argument(
@@ -182,8 +182,8 @@ def main():
     parser.add_argument(
         "--cuda-version",
         type=str,
-        default="cu121",
-        help="CUDA version (default: cu121)",
+        default="cu129",
+        help="CUDA version (default: cu129)",
     )
     parser.add_argument(
         "--torch-version",

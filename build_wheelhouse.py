@@ -27,6 +27,8 @@ def run_command(cmd: List[str], check: bool = True) -> subprocess.CompletedProce
         print(result.stdout)
     if result.stderr:
         print(result.stderr, file=sys.stderr)
+    if result.returncode != 0:
+        print(f"Command failed with exit code {result.returncode}", file=sys.stderr)
     return result
 
 
@@ -45,7 +47,7 @@ def download_wheels(
 ) -> None:
     """
     Download wheels for vLLM, torch, flashinfer and all dependencies.
-    
+
     Args:
         output_dir: Directory to save wheels
         python_version: Python version (e.g., '3.10')
@@ -55,8 +57,8 @@ def download_wheels(
         flashinfer_version: flashinfer version
     """
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Download PyTorch wheels
+
+    # Download PyTorch wheels first
     print(f"\n=== Downloading PyTorch {torch_version} ===")
     torch_cmd = [
         sys.executable, "-m", "pip", "download",
@@ -66,19 +68,8 @@ def download_wheels(
         "-d", str(output_dir),
     ]
     run_command(torch_cmd)
-    
-    # Download flashinfer wheels
-    print(f"\n=== Downloading flashinfer {flashinfer_version} ===")
-    flashinfer_cmd = [
-        sys.executable, "-m", "pip", "download",
-        f"flashinfer=={flashinfer_version}",
-        "--index-url", f"https://flashinfer.ai/whl/{cuda_version}",
-        "--no-deps",
-        "-d", str(output_dir),
-    ]
-    run_command(flashinfer_cmd)
-    
-    # Download vLLM and all dependencies
+
+    # Download vLLM and all dependencies (includes flashinfer)
     print(f"\n=== Downloading vLLM {vllm_version} and dependencies ===")
     vllm_cmd = [
         sys.executable, "-m", "pip", "download",
@@ -87,7 +78,7 @@ def download_wheels(
         "-d", str(output_dir),
     ]
     run_command(vllm_cmd)
-    
+
     # Download additional commonly missing packages
     print(f"\n=== Downloading additional packages ===")
     additional_packages = [

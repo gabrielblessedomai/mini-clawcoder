@@ -248,32 +248,38 @@ def install_vllm_wheelhouse() -> None:
     shutil.rmtree(SITE_PACKAGES, ignore_errors=True)
     SITE_PACKAGES.mkdir(parents=True, exist_ok=True)
     
-    # Copy aiohttp from system site-packages if available (it's missing from wheelhouse)
-    try:
-        result = subprocess.run(
-            [sys.executable, '-m', 'pip', 'show', 'aiohttp'],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        for line in result.stdout.splitlines():
-            if line.startswith('Location:'):
-                system_site = Path(line.split(':', 1)[1].strip())
-                aiohttp_path = system_site / 'aiohttp'
-                target_aiohttp = SITE_PACKAGES / 'aiohttp'
-                if aiohttp_path.exists() and not target_aiohttp.exists():
-                    print(f'Copying aiohttp from system: {aiohttp_path}', flush=True)
-                    shutil.copytree(aiohttp_path, target_aiohttp)
-                break
-    except subprocess.CalledProcessError:
-        print('aiohttp not found in system packages, will try to install from wheelhouse', flush=True)
-    
-    # Read requirements and filter out aiohttp since we handled it manually
+    # Read requirements to identify packages that might be missing from wheelhouse
     req_lines = requirements.read_text(encoding='utf-8').splitlines()
-    filtered_req_lines = [line for line in req_lines if not line.strip().startswith('aiohttp==')]
-    temp_requirements = SITE_PACKAGES / 'requirements_filtered.lock'
-    temp_requirements.write_text('\n'.join(filtered_req_lines), encoding='utf-8')
+    packages_to_copy = []
+    for line in req_lines:
+        line = line.strip()
+        if line and not line.startswith('#'):
+            # Extract package name (everything before ==)
+            pkg_name = line.split('==')[0].split('>=')[0].split('<=')[0].strip()
+            packages_to_copy.append(pkg_name)
     
+    # Copy potentially missing packages from system site-packages
+    for pkg_name in packages_to_copy:
+        try:
+            result = subprocess.run(
+                [sys.executable, '-m', 'pip', 'show', pkg_name],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            for line in result.stdout.splitlines():
+                if line.startswith('Location:'):
+                    system_site = Path(line.split(':', 1)[1].strip())
+                    pkg_path = system_site / pkg_name
+                    target_pkg = SITE_PACKAGES / pkg_name
+                    if pkg_path.exists() and not target_pkg.exists():
+                        print(f'Copying {pkg_name} from system: {pkg_path}', flush=True)
+                        shutil.copytree(pkg_path, target_pkg)
+                    break
+        except subprocess.CalledProcessError:
+            pass  # Package not in system, skip
+    
+    # Try installing with wheelhouse first
     cmd = [
         sys.executable,
         '-m',
@@ -283,7 +289,7 @@ def install_vllm_wheelhouse() -> None:
         '--find-links',
         str(WHEELHOUSE),
         '--requirement',
-        str(temp_requirements),
+        str(requirements),
         '--target',
         str(SITE_PACKAGES),
         '--upgrade',
@@ -295,7 +301,29 @@ def install_vllm_wheelhouse() -> None:
         '--no-warn-conflicts',
     ]
     print('Installing vLLM wheelhouse into', SITE_PACKAGES, flush=True)
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        # If wheelhouse install fails, try without --only-binary to allow source builds from system
+        print('Binary-only install failed, trying with source packages...', flush=True)
+        cmd = [
+            sys.executable,
+            '-m',
+            'pip',
+            'install',
+            '--find-links',
+            str(WHEELHOUSE),
+            '--requirement',
+            str(requirements),
+            '--target',
+            str(SITE_PACKAGES),
+            '--upgrade',
+            '--ignore-installed',
+            '--no-compile',
+            '--disable-pip-version-check',
+            '--no-warn-conflicts',
+        ]
+        subprocess.run(cmd, check=True)
     INSTALL_STAMP.write_text(STAMP_TEXT, encoding='utf-8')
 
 

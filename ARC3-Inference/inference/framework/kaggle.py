@@ -7,13 +7,13 @@ from dataclasses import dataclass
 
 from inference.utils.openai_compat import normalize_provider
 
-DEFAULT_VLLM_WHEELHOUSE_DATASET_SOURCE = "cmechevalier/face-of-agi-wheelhouse"
+DEFAULT_VLLM_WHEELHOUSE_DATASET_SOURCE = "gabrielblessed/omai-arc-agi-wheelhouse"
 DEFAULT_QWEN_MODEL_DATASET_SOURCE = "gabrielblessed/qwen3-32b-original"
 DEFAULT_SERVED_MODEL_NAME = "gabrielblessed/qwen3-32b-original"
 DEFAULT_VLLM_PORT = 1234
 DEFAULT_VLLM_MAX_MODEL_LEN = 65536
 DEFAULT_VLLM_TENSOR_PARALLEL_SIZE = 1
-DEFAULT_WHEELHOUSE_STAMP_TEXT = "face-of-agi-wheelhouse\n"
+DEFAULT_WHEELHOUSE_STAMP_TEXT = "omai-arc-agi-wheelhouse\n"
 
 # The 25 official ARC-AGI-3 games. The first 16 are the original Kaggle Mini-ClawCoder
 # validation harness order; the remaining 9 complete the official tag set.

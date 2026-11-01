@@ -248,6 +248,10 @@ def install_vllm_wheelhouse() -> None:
     shutil.rmtree(SITE_PACKAGES, ignore_errors=True)
     SITE_PACKAGES.mkdir(parents=True, exist_ok=True)
     
+    extracted_wheels = WHEELHOUSE / "wheels"
+    if not extracted_wheels.is_dir():
+        raise FileNotFoundError(f"Missing extracted wheels directory: {extracted_wheels}")
+    
     # Read requirements to identify packages that might be missing from wheelhouse
     req_lines = requirements.read_text(encoding='utf-8').splitlines()
     packages_to_copy = []
@@ -287,7 +291,7 @@ def install_vllm_wheelhouse() -> None:
         'install',
         '--no-index',
         '--find-links',
-        str(WHEELHOUSE),
+        str(extracted_wheels),
         '--requirement',
         str(requirements),
         '--target',
@@ -311,8 +315,9 @@ def install_vllm_wheelhouse() -> None:
             '-m',
             'pip',
             'install',
+            '--no-index',
             '--find-links',
-            str(WHEELHOUSE),
+            str(extracted_wheels),
             '--requirement',
             str(requirements),
             '--target',

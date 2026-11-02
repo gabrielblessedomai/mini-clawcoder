@@ -149,6 +149,7 @@ import time
 import urllib.request
 from pathlib import Path
 
+PIP_BOOTSTRAP_PYTHON = "/usr/bin/python3"
 WHEELHOUSE_OWNER = __WHEELHOUSE_OWNER__
 WHEELHOUSE_SLUG = __WHEELHOUSE_SLUG__
 MODEL_OWNER = __MODEL_OWNER__
@@ -239,98 +240,68 @@ def cached_install_is_usable() -> bool:
 
 
 def install_vllm_wheelhouse() -> None:
-    requirements = WHEELHOUSE / 'requirements.lock'
+    requirements = WHEELHOUSE / "requirements.lock"
+
     if not requirements.exists():
-        raise FileNotFoundError(f'Missing wheelhouse lock file: {requirements}')
+        raise FileNotFoundError(
+            f"Missing wheelhouse lock file: {requirements}"
+        )
+
     if cached_install_is_usable():
-        print(f'Using cached vLLM target install at {SITE_PACKAGES}', flush=True)
+        print(
+            f"Using cached vLLM target install at {SITE_PACKAGES}",
+            flush=True,
+        )
         return
+
     shutil.rmtree(SITE_PACKAGES, ignore_errors=True)
     SITE_PACKAGES.mkdir(parents=True, exist_ok=True)
-    
-    extracted_wheels = WHEELHOUSE / "wheels"
-    if not extracted_wheels.is_dir():
-        raise FileNotFoundError(f"Missing extracted wheels directory: {extracted_wheels}")
-    
-    # Read requirements to identify packages that might be missing from wheelhouse
-    req_lines = requirements.read_text(encoding='utf-8').splitlines()
-    packages_to_copy = []
-    for line in req_lines:
-        line = line.strip()
-        if line and not line.startswith('#'):
-            # Extract package name (everything before ==)
-            pkg_name = line.split('==')[0].split('>=')[0].split('<=')[0].strip()
-            packages_to_copy.append(pkg_name)
-    
-    # Copy potentially missing packages from system site-packages
-    for pkg_name in packages_to_copy:
-        try:
-            result = subprocess.run(
-                [sys.executable, '-m', 'pip', 'show', pkg_name],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            for line in result.stdout.splitlines():
-                if line.startswith('Location:'):
-                    system_site = Path(line.split(':', 1)[1].strip())
-                    pkg_path = system_site / pkg_name
-                    target_pkg = SITE_PACKAGES / pkg_name
-                    if pkg_path.exists() and not target_pkg.exists():
-                        print(f'Copying {pkg_name} from system: {pkg_path}', flush=True)
-                        shutil.copytree(pkg_path, target_pkg)
-                    break
-        except subprocess.CalledProcessError:
-            pass  # Package not in system, skip
-    
-    # Try installing with wheelhouse first
-    cmd = [
-        sys.executable,
-        '-m',
-        'pip',
-        'install',
-        '--no-index',
-        '--find-links',
-        str(extracted_wheels),
-        '--requirement',
-        str(requirements),
-        '--target',
-        str(SITE_PACKAGES),
-        '--upgrade',
-        '--ignore-installed',
-        '--only-binary',
-        ':all:',
-        '--no-compile',
-        '--disable-pip-version-check',
-        '--no-warn-conflicts',
-    ]
-    print('Installing vLLM wheelhouse into', SITE_PACKAGES, flush=True)
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError:
-        # If wheelhouse install fails, try without --only-binary to allow source builds from system
-        print('Binary-only install failed, trying with source packages...', flush=True)
-        cmd = [
-            sys.executable,
-            '-m',
-            'pip',
-            'install',
-            '--no-index',
-            '--find-links',
-            str(extracted_wheels),
-            '--requirement',
-            str(requirements),
-            '--target',
-            str(SITE_PACKAGES),
-            '--upgrade',
-            '--ignore-installed',
-            '--no-compile',
-            '--disable-pip-version-check',
-            '--no-warn-conflicts',
-        ]
-        subprocess.run(cmd, check=True)
-    INSTALL_STAMP.write_text(STAMP_TEXT, encoding='utf-8')
 
+    extracted_wheels = WHEELHOUSE / "wheels"
+
+    if not extracted_wheels.is_dir():
+        raise FileNotFoundError(
+            f"Missing extracted wheels directory: {extracted_wheels}"
+        )
+
+    if not Path(PIP_BOOTSTRAP_PYTHON).exists():
+        raise FileNotFoundError(
+            f"Python 3.13 pip interpreter not found: {PIP_BOOTSTRAP_PYTHON}"
+        )
+
+    print(
+        f"Installing vLLM wheelhouse into {SITE_PACKAGES}",
+        flush=True,
+    )
+    print(f"Package installer: {PIP_BOOTSTRAP_PYTHON}", flush=True)
+    print(f"Target Python runtime: {sys.executable}", flush=True)
+
+    cmd = [
+        PIP_BOOTSTRAP_PYTHON,
+        "-m",
+        "pip",
+        "--python",
+        sys.executable,
+        "install",
+        "--no-index",
+        "--find-links",
+        str(extracted_wheels),
+        "--requirement",
+        str(requirements),
+        "--target",
+        str(SITE_PACKAGES),
+        "--upgrade",
+        "--ignore-installed",
+        "--no-compile",
+        "--disable-pip-version-check",
+        "--no-warn-conflicts",
+    ]
+
+    subprocess.run(cmd, check=True)
+
+    INSTALL_STAMP.write_text(STAMP_TEXT, encoding="utf-8")
+
+    print("vLLM wheelhouse installation completed.", flush=True)
 
 def request_json(url: str, payload: dict | None = None, timeout: int = 30) -> dict:
     data = None if payload is None else json.dumps(payload).encode('utf-8')

@@ -149,6 +149,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+print("KAGGLE SETUP VERSION: 2", flush=True)
+
 PIP_BOOTSTRAP_PYTHON = "/usr/bin/python3"
 WHEELHOUSE_OWNER = __WHEELHOUSE_OWNER__
 WHEELHOUSE_SLUG = __WHEELHOUSE_SLUG__
@@ -266,7 +268,7 @@ def install_vllm_wheelhouse() -> None:
 
     if not Path(PIP_BOOTSTRAP_PYTHON).exists():
         raise FileNotFoundError(
-            f"Python 3.13 pip interpreter not found: {PIP_BOOTSTRAP_PYTHON}"
+            f"Pip bootstrap interpreter not found: {PIP_BOOTSTRAP_PYTHON}"
         )
 
     print(
